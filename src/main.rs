@@ -3,12 +3,14 @@
 use eframe::egui::{self, TextEdit};
 use yabf::*;
 
+const CODE: &str = ",.,+.";
+
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::vec2(800., 600.)),
         ..Default::default()
     };
-    let app = App::from(Program::from(",.,+."));
+    let app = App::from(Program::from(CODE));
     eframe::run_native("yabf", options, Box::new(|_cc| Box::new(app)))
 }
 
@@ -42,6 +44,11 @@ impl From<Program> for App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
+            for (_, font_id) in ui.style_mut().text_styles.iter_mut() {
+                font_id.size *= 1.65;
+            }
+
+            ui.heading(format!("Current program: {CODE}"));
             let mut need_input = false;
 
             let status = self.bf.step(
@@ -73,8 +80,8 @@ impl eframe::App for App {
             self.last_frame_status = status;
 
             let text_edit = TextEdit::singleline(&mut self.input_buf).hint_text(match need_input {
-                true => "Please enter your input.",
-                false => "No need to enter anything now.",
+                true => "need input",
+                false => "don't need input",
             });
             let _ = text_edit.show(ui);
 
