@@ -1,0 +1,84 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
+
+use eframe::egui::{self, TextEdit};
+use yabf::*;
+
+fn main() -> Result<(), eframe::Error> {
+    let options = eframe::NativeOptions {
+        initial_window_size: Some(egui::vec2(800., 600.)),
+        ..Default::default()
+    };
+    let app = App::from(Program::from(",.,+."));
+    eframe::run_native("yabf", options, Box::new(|_cc| Box::new(app)))
+}
+
+struct App {
+    bf: BfInstance<256>,
+    input_buf: String,
+    out_buf: String,
+    last_frame_status: ProgramStatus,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        Self {
+            bf: Default::default(),
+            input_buf: Default::default(),
+            out_buf: Default::default(),
+            last_frame_status: ProgramStatus::Run,
+        }
+    }
+}
+
+impl From<Program> for App {
+    fn from(p: Program) -> Self {
+        Self {
+            bf: BfInstance::from(p),
+            ..Default::default()
+        }
+    }
+}
+
+impl eframe::App for App {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            let mut need_input = false;
+
+            let status = self.bf.step(
+                || {
+                    need_input = true;
+                    self.input_buf.pop()
+                },
+                |out| {
+                    while let Some(c) = out.pop() {
+                        self.out_buf.push(c);
+                    }
+                    Ok(())
+                },
+            );
+
+            match (&self.last_frame_status, &status) {
+                (&ProgramStatus::Run, &ProgramStatus::Exit) => self
+                    .bf
+                    .io_buf
+                    .flush(|out| {
+                        while let Some(c) = out.pop() {
+                            self.out_buf.push(c);
+                        }
+                        Ok(())
+                    })
+                    .unwrap(),
+                _ => (),
+            };
+            self.last_frame_status = status;
+
+            let text_edit = TextEdit::singleline(&mut self.input_buf).hint_text(match need_input {
+                true => "Please enter your input.",
+                false => "No need to enter anything now.",
+            });
+            let _ = text_edit.show(ui);
+
+            ui.heading(format!("Program Output: {}", self.out_buf));
+        });
+    }
+}
