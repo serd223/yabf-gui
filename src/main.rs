@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::egui::{self, TextEdit};
-use yabf::*;
+use yabf_rs::*;
 
 const CODE: &str = ",.,+.";
 
@@ -15,7 +15,7 @@ fn main() -> Result<(), eframe::Error> {
 }
 
 struct App {
-    bf: BfInstance<256>,
+    bf: BfInstance,
     input_buf: String,
     out_buf: String,
     last_frame_status: ProgramStatus,
