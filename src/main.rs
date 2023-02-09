@@ -63,10 +63,9 @@ impl eframe::App for App {
                     Ok(())
                 },
             );
-
-            match (&self.last_frame_status, &status) {
-                (&ProgramStatus::Run, &ProgramStatus::Exit) => self
-                    .bf
+            if let (&ProgramStatus::Run, &ProgramStatus::Exit) = (&self.last_frame_status, &status)
+            {
+                self.bf
                     .io_buf
                     .flush(|out| {
                         while let Some(c) = out.pop() {
@@ -74,9 +73,8 @@ impl eframe::App for App {
                         }
                         Ok(())
                     })
-                    .unwrap(),
-                _ => (),
-            };
+                    .unwrap()
+            }
             self.last_frame_status = status;
 
             let text_edit = TextEdit::singleline(&mut self.input_buf).hint_text(match need_input {
