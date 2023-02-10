@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 eframe = "0.21.0"
-yabf_rs = "0.1.2"
+yabf_rs = { git = "https://github.com/serd223/yabf"}
